@@ -1,0 +1,25 @@
+{
+  "name": "lite-http-tunnel",
+  "description": "HTTP tunnel client",
+  "version": "0.0.1",
+  "main": "client.js",
+  "author": {
+    "name": "Embbnux Ji",
+    "url": "https://github.com/embbnux"
+  },
+  "bin": {
+    "lite-http-tunnel": "bin/lite-http-tunnel"
+  },
+  "license": "GPL-3.0",
+  "keywords": [
+    "cli",
+    "lite-http-tunnel"
+  ],
+  "scripts": {
+    "start": "node client.js"
+  },
+  "dependencies": {
+    "commander": "^9.0.0",
+    "socket.io-client": "^4.4.1"
+  }
+}
