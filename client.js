@@ -114,7 +114,7 @@ program
       return;
     }
     if (!config.jwtToken) {
-      console.log('Please set jwt token for ${config.server} firstly');
+      console.log(`Please set jwt token for ${config.server} firstly`);
       return;
     }
     options.port = port;
