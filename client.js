@@ -43,6 +43,9 @@ function initClient(options) {
     console.log(`${request.method}: `, request.path);
     request.port = options.port;
     request.hostname = options.host;
+    if (options.origin) {
+      request.headers.host = options.origin;
+    }
     const socketRequest = new SocketRequest({
       requestId,
       socket: socket,
@@ -99,6 +102,7 @@ program
   })
   .option('-p, --profile <string>', 'setting profile name', 'default')
   .option('-h, --host <string>', 'local host value', 'localhost')
+  .option('-o, --origin <string>', 'change request origin')
   .action((port, options) => {
     const configDir = path.resolve(os.homedir(), '.lite-http-tunnel');
     if (!fs.existsSync(configDir)){

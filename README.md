@@ -36,3 +36,9 @@ $ lite-http-tunnel start your_local_server_port
 Please replace your_local_server_port with your local HTTP server port, eg: `8080`.
 
 After that you can access your local HTTP server by access `your_public_server_domain`.
+
+Change origin:
+
+```
+$ lite-http-tunnel start your_local_server_port -o localhost:5000
+```
