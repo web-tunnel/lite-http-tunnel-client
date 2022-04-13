@@ -1,7 +1,7 @@
 {
   "name": "lite-http-tunnel",
   "description": "HTTP tunnel client",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "main": "client.js",
   "author": {
     "name": "Embbnux Ji",

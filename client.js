@@ -19,6 +19,7 @@ function keepAlive() {
 
 function initClient(options) {
   socket = io(options.server, {
+    path: '/$web_tunnel',
     transports: ["websocket"],
     auth: {
       token: options.jwtToken,
@@ -61,8 +62,12 @@ function initClient(options) {
     };
     socketRequest.once('error', onSocketRequestError);
     socketRequest.once('end', onSocketRequestEnd);
+    const isWebSocketProxyRequest = request.headers.upgrade === 'websocket';
     const onLocalResponse = (localRes) => {
       localReq.off('error', onLocalError);
+      if (isWebSocketProxyRequest && localRes.upgrade) {
+        return;
+      }
       const socketResponse = new SocketResponse({
         responseId: requestId,
         socket: socket,
@@ -70,7 +75,8 @@ function initClient(options) {
       socketResponse.writeHead(
         localRes.statusCode,
         localRes.statusMessage,
-        localRes.headers
+        localRes.headers,
+        localRes.httpVersion,
       );
       localRes.pipe(socketResponse);
     };
@@ -82,7 +88,25 @@ function initClient(options) {
     };
     localReq.once('error', onLocalError);
     localReq.once('response', onLocalResponse);
-    // localReq.setTimeout(15000);
+
+    if (request.headers.upgrade === 'websocket') {
+      localReq.on('upgrade', (localRes, localSocket, localHead) => {
+        // localSocket.once('error', onSocketRequestError);
+        if (localHead && localHead.length) localSocket.unshift(localHead);
+        const socketResponse = new SocketResponse({
+          responseId: requestId,
+          socket: socket,
+          duplex: true,
+        });
+        socketResponse.writeHead(
+          null,
+          null,
+          localRes.headers
+        );
+        localSocket.pipe(socketResponse).pipe(localSocket);
+      });
+      return;
+    }
   });
   keepAlive();
 }
