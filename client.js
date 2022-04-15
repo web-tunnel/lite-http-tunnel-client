@@ -4,7 +4,7 @@ const path = require('path');
 const http   = require('http');
 const { io } = require('socket.io-client');
 const { program, InvalidArgumentError, Argument } = require('commander');
-const { SocketRequest, SocketResponse } = require('./lib');
+const { TunnelRequest, TunnelResponse } = require('./lib');
 
 let socket = null;
 
@@ -41,71 +41,71 @@ function initClient(options) {
   });
 
   socket.on('request', (requestId, request) => {
-    console.log(`${request.method}: `, request.path);
+    const isWebSocket = request.headers.upgrade === 'websocket';
+    console.log(`${isWebSocket ? 'WS' : request.method}: `, request.path);
     request.port = options.port;
     request.hostname = options.host;
     if (options.origin) {
       request.headers.host = options.origin;
     }
-    const socketRequest = new SocketRequest({
+    const tunnelRequest = new TunnelRequest({
       requestId,
       socket: socket,
     });
     const localReq = http.request(request);
-    socketRequest.pipe(localReq);
-    const onSocketRequestError = (e) => {
-      socketRequest.off('end', onSocketRequestEnd);
+    tunnelRequest.pipe(localReq);
+    const onTunnelRequestError = (e) => {
+      tunnelRequest.off('end', onTunnelRequestEnd);
       localReq.destroy(e);
     };
-    const onSocketRequestEnd = () => {
-      socketRequest.off('error', onSocketRequestError);
+    const onTunnelRequestEnd = () => {
+      tunnelRequest.off('error', onTunnelRequestError);
     };
-    socketRequest.once('error', onSocketRequestError);
-    socketRequest.once('end', onSocketRequestEnd);
-    const isWebSocketProxyRequest = request.headers.upgrade === 'websocket';
+    tunnelRequest.once('error', onTunnelRequestError);
+    tunnelRequest.once('end', onTunnelRequestEnd);
     const onLocalResponse = (localRes) => {
       localReq.off('error', onLocalError);
-      if (isWebSocketProxyRequest && localRes.upgrade) {
+      if (isWebSocket && localRes.upgrade) {
         return;
       }
-      const socketResponse = new SocketResponse({
+      const tunnelResponse = new TunnelResponse({
         responseId: requestId,
         socket: socket,
       });
-      socketResponse.writeHead(
+      tunnelResponse.writeHead(
         localRes.statusCode,
         localRes.statusMessage,
         localRes.headers,
         localRes.httpVersion,
       );
-      localRes.pipe(socketResponse);
+      localRes.pipe(tunnelResponse);
     };
     const onLocalError = (error) => {
       console.log(error);
       localReq.off('response', onLocalResponse);
       socket.emit('request-error', requestId, error && error.message);
-      socketRequest.destroy(error);
+      tunnelRequest.destroy(error);
+    };
+    const onUpgrade = (localRes, localSocket, localHead) => {
+      // localSocket.once('error', onTunnelRequestError);
+      if (localHead && localHead.length) localSocket.unshift(localHead);
+      const tunnelResponse = new TunnelResponse({
+        responseId: requestId,
+        socket: socket,
+        duplex: true,
+      });
+      tunnelResponse.writeHead(
+        null,
+        null,
+        localRes.headers
+      );
+      localSocket.pipe(tunnelResponse).pipe(localSocket);
     };
     localReq.once('error', onLocalError);
     localReq.once('response', onLocalResponse);
 
-    if (request.headers.upgrade === 'websocket') {
-      localReq.on('upgrade', (localRes, localSocket, localHead) => {
-        // localSocket.once('error', onSocketRequestError);
-        if (localHead && localHead.length) localSocket.unshift(localHead);
-        const socketResponse = new SocketResponse({
-          responseId: requestId,
-          socket: socket,
-          duplex: true,
-        });
-        socketResponse.writeHead(
-          null,
-          null,
-          localRes.headers
-        );
-        localSocket.pipe(socketResponse).pipe(localSocket);
-      });
-      return;
+    if (isWebSocket) {
+      localReq.on('upgrade', onUpgrade);
     }
   });
   keepAlive();

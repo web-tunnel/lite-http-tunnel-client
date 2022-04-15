@@ -1,6 +1,6 @@
 const stream = require('stream');
 
-class SocketRequest extends stream.Readable {
+class TunnelRequest extends stream.Readable {
   constructor({ socket, requestId }) {
     super();
     this._socket = socket;
@@ -47,7 +47,7 @@ class SocketRequest extends stream.Readable {
   _read() {}
 }
 
-class SocketResponse extends stream.Duplex {
+class TunnelResponse extends stream.Duplex {
   constructor({ socket, responseId, duplex }) {
     super();
     this._socket = socket;
@@ -138,5 +138,5 @@ class SocketResponse extends stream.Duplex {
   _read(size) {}
 }
 
-exports.SocketRequest = SocketRequest;
-exports.SocketResponse = SocketResponse;
+exports.TunnelRequest = TunnelRequest;
+exports.TunnelResponse = TunnelResponse;
