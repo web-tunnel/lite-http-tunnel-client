@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const http   = require('http');
 const { io } = require('socket.io-client');
+const HttpsProxyAgent = require('https-proxy-agent');
 const { program, InvalidArgumentError, Argument } = require('commander');
 const { TunnelRequest, TunnelResponse } = require('./lib');
 
@@ -18,13 +19,18 @@ function keepAlive() {
 }
 
 function initClient(options) {
-  socket = io(options.server, {
+  const initParams = {
     path: '/$web_tunnel',
     transports: ["websocket"],
     auth: {
       token: options.jwtToken,
     },
-  });
+  };
+  const http_proxy = process.env.https_proxy || process.env.http_proxy;
+  if (http_proxy) {
+    initParams.agent = new HttpsProxyAgent(http_proxy);
+  }
+  socket = io(options.server, initParams);
 
   socket.on('connect', () => {
     if (socket.connected) {
