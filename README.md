@@ -21,11 +21,13 @@ Config remote public server address:
 $ lite-http-tunnel config server https://your_web_host_domain
 ```
 
-Config jwt token that you got from server:
+Auth with tunnel server:
 
+```shell
+$ lite-http-tunnel auth $JWT_GENERATOR_USERNAME $JWT_GENERATOR_PASSWORD
 ```
-$ lite-http-tunnel config jwt your_jwt_token
-```
+
+ > Replace `$JWT_GENERATOR_USERNAME` and `$JWT_GENERATOR_PASSWORD` with values that you provide at tunnel server
 
 ### Start client
 
