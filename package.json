@@ -1,7 +1,7 @@
 {
   "name": "lite-http-tunnel",
   "description": "HTTP tunnel client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "client.js",
   "author": {
     "name": "Embbnux Ji",
@@ -21,6 +21,7 @@
   "dependencies": {
     "commander": "^9.0.0",
     "https-proxy-agent": "^5.0.1",
-    "socket.io-client": "^4.4.1"
+    "node-fetch": "^2.6.1",
+    "socket.io-client": "^4.6.1"
   }
 }
