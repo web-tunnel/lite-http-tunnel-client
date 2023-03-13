@@ -26,7 +26,11 @@ function initClient(options) {
     auth: {
       token: options.jwtToken,
     },
+    extraHeaders: {},
   };
+  if (options.path) {
+    initParams.extraHeaders['path-prefix'] = options.path;
+  }
   const http_proxy = process.env.https_proxy || process.env.http_proxy;
   if (http_proxy) {
     initParams.agent = new HttpsProxyAgent(http_proxy);
@@ -155,12 +159,13 @@ program
     options.port = port;
     options.jwtToken = config.jwtToken;
     options.server = config.server;
+    options.path = config.path;
     initClient(options);
   });
 
 program
   .command('config')
-  .addArgument(new Argument('<type>', 'config type').choices(['jwt', 'server']))
+  .addArgument(new Argument('<type>', 'config type').choices(['jwt', 'server', 'path']))
   .argument('<value>', 'config value')
   .option('-p --profile <string>', 'setting profile name', 'default')
   .action((type, value, options) => {
@@ -178,6 +183,9 @@ program
     }
     if (type === 'server') {
       config.server = value;
+    }
+    if (type == 'path') {
+      config.path = value;
     }
     fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2));
     console.log(`${type} config saved successfully`);
